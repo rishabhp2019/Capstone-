@@ -1,3 +1,5 @@
+<script defer src="{{ url_for('static', filename='sitescript.js') }}"></script>
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -25,9 +27,10 @@
         <div class="col-12 bg-success">
           Chartcell welcomes you
           <div class="float-end p-2">
-            <button type="button" class="btn btn-light" onclick="logout()">
-              Logout
-            </button>
+            <form action="{{ url_for('logout') }}" method="post">
+              <button type="submit" class="btn btn-light">Logout</button>
+          </form>
+          
           </div>
           <div class="float-end p-2">
             <span class="text-light">User: {{ current_user.username }}</span>
