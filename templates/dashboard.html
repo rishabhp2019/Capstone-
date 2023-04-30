@@ -1,0 +1,81 @@
+<script defer src="{{ url_for('static', filename='sitescript.js') }}"></script>
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <link
+      href="{{ url_for('static', filename='main.css') }}"
+      rel="stylesheet"
+    />
+    <script
+      defer
+      src="{{ url_for('static', filename='sitescript.js') }}"
+    ></script>
+    <title>Excell Visualizer</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12 bg-success">
+          Chartcell welcomes you
+          <div class="float-end p-2">
+            <form action="{{ url_for('logout') }}" method="post">
+              <button type="submit" class="btn btn-light">Logout</button>
+          </form>
+          
+          </div>
+          <div class="float-end p-2">
+            <span class="text-light">User: {{ current_user.username }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-4">
+          <div class="p-3">
+            <div class="p-3 panel-border">
+              <h4>Recently Uploaded Files</h4>
+              <ul>
+                {% block content %}
+                {% for html_file in html_files %}
+                  <li>
+                    <a href="{{ url_for('uploaded_file', filename=html_file) }}">{{ html_file }}</a>
+                  </li>
+                {% endfor %}
+                {% endblock %}
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-8">
+          <div class="p-3">
+            <div class="p-3 panel-border">
+              <h4>Upload or Drag In New File</h4>
+              <form
+                action="{{ url_for('upload_file') }}"
+                method="post"
+                enctype="multipart/form-data"
+              >
+                <input
+                  type="file"
+                  name="file"
+                  class="form-control"
+                  accept=".xlsx, .xls, application/vnd.ms-excel"
+                />
+                <br />
+                <button type="submit" class="btn btn-primary">Upload</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
