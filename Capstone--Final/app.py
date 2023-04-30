@@ -99,11 +99,12 @@ def dashboard():
     html_files = [f for f in os.listdir(UPLOAD_FOLDER) if f.endswith('.html')]
     return render_template('dashboard.html', name=current_user.username, html_files=html_files)
 
-@app.route('/logout')
+@app.route('/logout', methods=['POST'])
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
 
 
 class ExcelFile(db.Model):
@@ -138,9 +139,9 @@ def upload_file():
             else:
                 df = pd.read_excel(file_path)
             charts = []
-            for column in df.columns:
-                chart_id = str(uuid.uuid4())
-                chart_file = os.path.join(app.config['UPLOAD_FOLDER'], f'{chart_id}.html')
+            for i, column in enumerate(df.columns):
+                chart_filename = f'{os.path.splitext(filename)[0]}_{i+1}.html'
+                chart_file = os.path.join(app.config['UPLOAD_FOLDER'], chart_filename)
                 fig, ax = plt.subplots()
                 ax.set_title(column)
                 ax.plot(df[column])
@@ -148,7 +149,7 @@ def upload_file():
                 with open(chart_file, 'w') as f:
                     f.write(html)
                 # Create an ExcelFile object and add it to the database
-                chart = ExcelFile(filename=filename, chart_filename=f'{chart_id}.html')
+                chart = ExcelFile(filename=filename, chart_filename=chart_filename)
                 db.session.add(chart)
                 charts.append(chart)
             db.session.commit()  # Save the changes to the database
@@ -158,7 +159,7 @@ def upload_file():
 
         # Display charts in a new page
         return render_template('charts.html', charts=charts)
-    return redirect(url_for('charts'))
+    return redirect(url_for('dashboard'))
 
 @app.route('/charts', methods=['GET', 'POST'])
 @login_required
