@@ -11,7 +11,9 @@ import matplotlib.pyplot as plt
 import app
 import uuid
 
-UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER')  # Change this to the directory where you want to store uploaded files
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(current_dir, 'uploads')
 
 ALLOWED_EXTENSIONS = {'xlsx', 'xls', 'csv'}  # Change this to the set of file extensions you want to allow
 
@@ -41,11 +43,6 @@ class ExcelFile(db.Model):
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-UPLOAD_FOLDER = 'C:\\Users\\risha\\OneDrive\\Desktop\\test\\uploads'
-
-ALLOWED_EXTENSIONS = {'xlsx', 'xls', 'csv'} 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret_key'
@@ -163,12 +160,15 @@ def upload_file():
         return render_template('charts.html', charts=charts)
     return redirect(url_for('charts'))
 
-@app.route('/charts')
+@app.route('/charts', methods=['GET', 'POST'])
 @login_required
 def charts():
     html_files = [f for f in os.listdir(UPLOAD_FOLDER) if f.endswith('.html')]
-    return render_template('charts.html', name=current_user.username, html_files=html_files)
+    return render_template('dashboard.html', name=current_user.username, html_files=html_files)
 
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
     with app.app_context():
