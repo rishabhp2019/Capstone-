@@ -95,10 +95,17 @@ def upload_file():
         flash('File uploaded successfully!', 'success')
         # Create charts from uploaded file
         try:
-            if filename.endswith('.csv'):
+            file_extension = filename.rsplit('.', 1)[1].lower()
+
+            if file_extension == 'csv':
                 df = pd.read_csv(file_path)
+            elif file_extension == 'xlsx':
+                df = pd.read_excel(file_path, engine='openpyxl')
+            elif file_extension == 'xls':
+                df = pd.read_excel(file_path, engine='xlrd')
             else:
-                df = pd.read_excel(file_path)
+                raise ValueError(f"Unsupported file extension: {file_extension}")
+
             charts = []
             for i, column in enumerate(df.columns):
                 chart_filename = f"{current_user.username}_{os.path.splitext(filename)[0]}_{i+1}.html"
@@ -122,6 +129,8 @@ def upload_file():
                 ax_pie.pie(pie_data, labels=pie_data.index, autopct='%1.1f%%', startangle=90)
                 ax_pie.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
 
+                plt.tight_layout()  # Adjust layout to prevent overlapping labels
+
                 # Save the combined figure as an HTML file
                 html = mpld3.fig_to_html(fig)
                 chart_file = os.path.join(app.config['UPLOAD_FOLDER'], chart_filename)
@@ -132,7 +141,7 @@ def upload_file():
                 chart = ExcelFile(filename=filename, chart_filename=chart_filename)
                 db.session.add(chart)
                 charts.append(chart)
-            
+
             db.session.commit()  # Save the changes to the database
         except Exception as e:
             flash(f'Failed to create charts: {e}', 'danger')
@@ -140,6 +149,7 @@ def upload_file():
     
     # Display charts in a new page
     return render_template('charts.html', charts=charts)
+
 
 @app.route('/charts', methods=['GET', 'POST'])
 @login_required
@@ -154,4 +164,4 @@ def uploaded_file(filename):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=False,host='0.0.0.0')
+    app.run(debug=True)
