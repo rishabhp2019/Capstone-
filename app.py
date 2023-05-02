@@ -102,25 +102,44 @@ def upload_file():
             charts = []
             for i, column in enumerate(df.columns):
                 chart_filename = f"{current_user.username}_{os.path.splitext(filename)[0]}_{i+1}.html"
-                chart_file = os.path.join(app.config['UPLOAD_FOLDER'], chart_filename)
-                fig, ax = plt.subplots()
-                ax.set_title(column)
-                ax.plot(df[column])
+                
+                # Create a figure with three subplots (scatter, bar, and pie)
+                fig, (ax_scatter, ax_bar, ax_pie) = plt.subplots(1, 3, figsize=(18, 4))
+                fig.suptitle(column)
+
+                # Scatter plot
+                ax_scatter.set_title(column)
+                ax_scatter.scatter(range(len(df[column])), df[column])
+
+                # Bar plot
+                ax_bar.set_title(column)
+                ax_bar.bar(range(len(df[column])), df[column])
+
+                # Pie chart
+                ax_pie.set_title(column)
+                # You may want to modify the following line to aggregate the data in a meaningful way for a pie chart
+                pie_data = df[column].value_counts(normalize=True)
+                ax_pie.pie(pie_data, labels=pie_data.index, autopct='%1.1f%%', startangle=90)
+                ax_pie.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
+
+                # Save the combined figure as an HTML file
                 html = mpld3.fig_to_html(fig)
+                chart_file = os.path.join(app.config['UPLOAD_FOLDER'], chart_filename)
                 with open(chart_file, 'w') as f:
                     f.write(html)
+                
                 # Create an ExcelFile object and add it to the database
                 chart = ExcelFile(filename=filename, chart_filename=chart_filename)
                 db.session.add(chart)
                 charts.append(chart)
+            
             db.session.commit()  # Save the changes to the database
         except Exception as e:
             flash(f'Failed to create charts: {e}', 'danger')
             return redirect(url_for('dashboard'))
-
-        # Display charts in a new page
-        return render_template('charts.html', charts=charts)
-    return redirect(url_for('dashboard'))
+    
+    # Display charts in a new page
+    return render_template('charts.html', charts=charts)
 
 @app.route('/charts', methods=['GET', 'POST'])
 @login_required
