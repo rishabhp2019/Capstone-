@@ -73,7 +73,7 @@ def register():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    html_files = [f for f in os.listdir(UPLOAD_FOLDER) if f.endswith('.html')]
+    html_files = [f for f in os.listdir(UPLOAD_FOLDER) if f.endswith('.html') and f.startswith(current_user.username)]
     return render_template('dashboard.html', name=current_user.username, html_files=html_files)
 
 @app.route('/logout', methods=['POST'])
@@ -88,10 +88,11 @@ def upload_file():
     file = request.files['file']
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        username = current_user.username
+        new_filename = f"{username}_{filename}"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
         file.save(file_path)
         flash('File uploaded successfully!', 'success')
-
         # Create charts from uploaded file
         try:
             if filename.endswith('.csv'):
@@ -100,7 +101,7 @@ def upload_file():
                 df = pd.read_excel(file_path)
             charts = []
             for i, column in enumerate(df.columns):
-                chart_filename = f'{os.path.splitext(filename)[0]}_{i+1}.html'
+                chart_filename = f"{current_user.username}_{os.path.splitext(filename)[0]}_{i+1}.html"
                 chart_file = os.path.join(app.config['UPLOAD_FOLDER'], chart_filename)
                 fig, ax = plt.subplots()
                 ax.set_title(column)
